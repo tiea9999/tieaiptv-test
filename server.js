@@ -25,7 +25,6 @@ app.get("/proxy", async (req, res) => {
     await page.setUserAgent("Mozilla/5.0");
     await page.goto(pageUrl, { waitUntil: "networkidle2" });
 
-    // ดึงลิงก์ m3u8
     const m3u8 = await page.evaluate(() => {
       const vid = document.querySelector("video");
       return vid?.src || null;
@@ -44,4 +43,3 @@ app.get("/proxy", async (req, res) => {
 });
 
 app.listen(10000, () => console.log("TIEA IPTV Proxy running on port 10000"));
-
