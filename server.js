@@ -6,11 +6,7 @@ const app = express();
 app.use(cors());
 
 const channelMap = {
-  warnertv: "https://dookeela2.live/live-tv/warnertv",
-  truemoviehits: "https://dookeela2.live/live-tv/truemoviehits",
-  trueasianmore: "https://dookeela2.live/live-tv/trueasianmore",
-  truefilmasia: "https://dookeela2.live/live-tv/truefilmasia",
-  monomax1: "https://dookeela2.live/live-tv/monomax1"
+ monomax1: "https://lfbtv.com/doonunglive/channel/?code=monomax1"
 };
 
 app.get("/proxy", async (req, res) => {
