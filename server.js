@@ -1,36 +1,22 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
-
-const app = express();
-app.use(cors());
-
-// ===== CONFIG =====
-const BASE_URL = "http://103.114.203.129:8080";
-const USER = "ott168";
-const PASS = "ott168";
-
-// ===== TEST =====
-app.get("/", (req, res) => {
-  res.send("TIEA IPTV Dynamic Proxy running");
-});
-
-// ===== DYNAMIC STREAM (1–54000+) =====
 app.get("/ott/:ch", async (req, res) => {
-  const ch = req.params.ch;
+  let ch = parseInt(req.params.ch);
 
-  // กันกรณีไม่ใช่ตัวเลข
-  if (!/^\d+$/.test(ch)) {
+  if (isNaN(ch)) {
     return res.status(400).send("Invalid channel");
   }
 
-  const streamUrl = `${BASE_URL}/${USER}/${PASS}/${ch}`;
+  // 🔑 offset ช่อง 1–999
+  if (ch < 1000) {
+    ch = ch + 1000;
+  }
+
+  const streamUrl = `http://103.114.203.129:8080/ott168/ott168/${ch}`;
 
   try {
     const r = await fetch(streamUrl, {
       headers: {
         "User-Agent": "IPTV/1.0",
-        "Referer": BASE_URL,
+        "Referer": "http://103.114.203.129:8080/",
         "Connection": "keep-alive"
       }
     });
@@ -39,9 +25,7 @@ app.get("/ott/:ch", async (req, res) => {
       return res.status(502).send("Source error");
     }
 
-    // ส่ง stream ตรง (เร็ว)
     res.set({
-      "Content-Type": "application/vnd.apple.mpegurl",
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "no-cache"
     });
@@ -53,9 +37,4 @@ app.get("/ott/:ch", async (req, res) => {
   }
 });
 
-// ===== START =====
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Dynamic IPTV Proxy running on port " + PORT);
-});
 
