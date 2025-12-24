@@ -1,47 +1,61 @@
 import express from "express";
-import cors from "cors";
 import fetch from "node-fetch";
+import cors from "cors";
 
 const app = express();
 app.use(cors());
 
-const channelMap = {
-  monomax1: "https://lfbtv.com/doonunglive/channel/?code=monomax1"
-};
+// ===== CONFIG =====
+const BASE_URL = "http://103.114.203.129:8080";
+const USER = "ott168";
+const PASS = "ott168";
 
-async function extractM3U8(url) {
-  const res = await fetch(url, {
-    headers: {
-      "user-agent": "Mozilla/5.0"
-    }
-  });
+// ===== TEST =====
+app.get("/", (req, res) => {
+  res.send("TIEA IPTV Dynamic Proxy running");
+});
 
-  const html = await res.text();
+// ===== DYNAMIC STREAM (1–54000+) =====
+app.get("/ott/:ch", async (req, res) => {
+  const ch = req.params.ch;
 
-  // ดัก m3u8
-  const match = html.match(/https?:\/\/[^"' ]+\.m3u8[^"' ]*/i);
-  return match ? match[0] : null;
-}
+  // กันกรณีไม่ใช่ตัวเลข
+  if (!/^\d+$/.test(ch)) {
+    return res.status(400).send("Invalid channel");
+  }
 
-app.get("/proxy", async (req, res) => {
-  const channel = req.query.channel;
-  const pageUrl = channelMap[channel];
-  if (!pageUrl) return res.status(404).send("Channel not found");
+  const streamUrl = `${BASE_URL}/${USER}/${PASS}/${ch}`;
 
   try {
-    const m3u8 = await extractM3U8(pageUrl);
-    if (!m3u8) return res.status(500).send("m3u8 not found");
+    const r = await fetch(streamUrl, {
+      headers: {
+        "User-Agent": "IPTV/1.0",
+        "Referer": BASE_URL,
+        "Connection": "keep-alive"
+      }
+    });
 
-    res.redirect(m3u8);
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Error fetching stream");
+    if (!r.ok) {
+      return res.status(502).send("Source error");
+    }
+
+    // ส่ง stream ตรง (เร็ว)
+    res.set({
+      "Content-Type": "application/vnd.apple.mpegurl",
+      "Access-Control-Allow-Origin": "*",
+      "Cache-Control": "no-cache"
+    });
+
+    r.body.pipe(res);
+
+  } catch (e) {
+    res.status(500).send(e.message);
   }
 });
 
+// ===== START =====
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () =>
-  console.log("TIEA IPTV Proxy running on port", PORT)
-);
-
+app.listen(PORT, () => {
+  console.log("Dynamic IPTV Proxy running on port " + PORT);
+});
 
