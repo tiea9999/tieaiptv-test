@@ -2,7 +2,7 @@ import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
 
-const app = express();   // 👈 ตัวนี้หายไป ทำให้ error
+const app = express();
 app.use(cors());
 
 // ===== CONFIG =====
@@ -15,7 +15,7 @@ app.get("/", (req, res) => {
   res.send("TIEA IPTV Dynamic Proxy running");
 });
 
-// ===== OTT PROXY (รองรับ 1–54000 + OFFSET) =====
+// ===== OTT PROXY =====
 app.get("/ott/:ch", async (req, res) => {
   let ch = parseInt(req.params.ch);
 
@@ -43,7 +43,6 @@ app.get("/ott/:ch", async (req, res) => {
       return res.status(502).send("Source error");
     }
 
-    // ⚡ ส่ง stream ตรง
     res.set({
       "Access-Control-Allow-Origin": "*",
       "Cache-Control": "no-cache"
