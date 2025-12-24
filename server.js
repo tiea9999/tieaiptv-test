@@ -1,21 +1,3 @@
-import express from "express";
-import fetch from "node-fetch";
-import cors from "cors";
-
-const app = express();
-app.use(cors());
-
-// ===== CONFIG =====
-const BASE_URL = "http://103.114.203.129:8080";
-const USER = "ott168";
-const PASS = "ott168";
-
-// ===== TEST ROUTE =====
-app.get("/", (req, res) => {
-  res.send("TIEA IPTV Dynamic Proxy running");
-});
-
-// ===== OTT PROXY =====
 app.get("/ott/:ch", async (req, res) => {
   let ch = parseInt(req.params.ch);
 
@@ -28,13 +10,13 @@ app.get("/ott/:ch", async (req, res) => {
     ch = ch + 1000;
   }
 
-  const streamUrl = `${BASE_URL}/${USER}/${PASS}/${ch}`;
+  const streamUrl = `http://103.114.203.129:8080/ott168/ott168/${ch}`;
 
   try {
     const r = await fetch(streamUrl, {
       headers: {
         "User-Agent": "IPTV/1.0",
-        "Referer": BASE_URL,
+        "Referer": "http://103.114.203.129:8080/",
         "Connection": "keep-alive"
       }
     });
@@ -53,12 +35,6 @@ app.get("/ott/:ch", async (req, res) => {
   } catch (e) {
     res.status(500).send(e.message);
   }
-});
-
-// ===== START SERVER =====
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Dynamic IPTV Proxy running on port " + PORT);
 });
 
 
