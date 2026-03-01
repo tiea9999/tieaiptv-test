@@ -5,50 +5,106 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// ===== TEST ROUTE =====
-app.get("/", (req, res) => {
-  res.send("TIEA IPTV Dynamic Proxy running");
+// ===== CONFIG =====
+const HOST = "http://mypanel-4k.com";
+const USER = "rmt8r91bac";
+const PASS = "tsleey7v5g";
+
+// ===== CHANNEL LIST =====
+const channels = {
+  hbo: { id: 1776087, name: "HBO" },
+  nick: { id: 1776230, name: "Nick" }
+};
+
+// ===== HOME =====
+app.get("/", (req,res)=>{
+res.send("TIEA IPTV HLS PROXY RUNNING");
 });
 
-// ===== OTT PROXY =====
-app.get("/ott/:ch", async (req, res) => {
-  let ch = parseInt(req.params.ch);
-  if (isNaN(ch)) return res.status(400).send("Invalid channel");
+// ===== PLAYLIST =====
+app.get("/playlist.m3u",(req,res)=>{
 
-  // offset ช่อง 1–999
-  if (ch < 1000) ch += 1000;
+let m3u = "#EXTM3U\n";
 
-  const url = `http://103.114.203.129:8080/ott168/ott168/${ch}`;
+for(const key in channels){
 
-  try {
-    const r = await fetch(url, {
-      headers: {
-        "User-Agent": "IPTV/1.0",
-        "Referer": "http://103.114.203.129:8080",
-        "Connection": "keep-alive"
-      }
-    });
+const ch = channels[key];
 
-    if (!r.ok) return res.sendStatus(502);
+m3u += `#EXTINF:-1,${ch.name}\n`;
+m3u += `${req.protocol}://${req.get("host")}/ch/${ch.id}\n`;
 
-    // ⭐ สำคัญมาก
-    res.writeHead(200, {
-      "Content-Type": "video/mp2t",
-      "Cache-Control": "no-cache",
-      "Connection": "keep-alive",
-      "Access-Control-Allow-Origin": "*",
-    });
+}
 
-    r.body.pipe(res);
+res.setHeader("Content-Type","audio/x-mpegurl");
+res.send(m3u);
 
-  } catch (e) {
-    res.status(500).send(e.message);
-  }
 });
 
-// ===== START SERVER =====
+// ===== HLS PLAYLIST =====
+app.get("/ch/:id", async (req,res)=>{
+
+const id = req.params.id;
+
+const url = `${HOST}/live/${USER}/${PASS}/${id}.m3u8`;
+
+try{
+
+const r = await fetch(url,{
+headers:{
+"User-Agent":"Mozilla/5.0",
+"Connection":"keep-alive"
+}
+});
+
+let text = await r.text();
+
+// rewrite segment
+text = text.replace(
+/^(?!#)(.*\.ts.*)$/gm,
+`/segment/${id}/$1`
+);
+
+res.setHeader("Content-Type","application/vnd.apple.mpegurl");
+
+res.send(text);
+
+}catch(e){
+res.status(500).send(e.message);
+}
+
+});
+
+// ===== SEGMENT =====
+app.get("/segment/:id/:file", async (req,res)=>{
+
+const id = req.params.id;
+const file = req.params.file;
+
+const url = `${HOST}/live/${USER}/${PASS}/${id}/${file}`;
+
+try{
+
+const r = await fetch(url,{
+headers:{
+"User-Agent":"Mozilla/5.0",
+"Connection":"keep-alive"
+}
+});
+
+res.setHeader("Content-Type","video/mp2t");
+
+r.body.pipe(res);
+
+}catch(e){
+res.status(500).send(e.message);
+}
+
+});
+
+// ===== START =====
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log("Dynamic IPTV Proxy running on port " + PORT);
+
+app.listen(PORT,()=>{
+console.log("TIEA IPTV HLS Proxy running on "+PORT);
 });
 
