@@ -5,48 +5,44 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// CONFIG
 const HOST = "http://mypanel-4k.com:80";
 const USER = "rmt8r91bac";
 const PASS = "tsleey7v5g";
 
-// HOME
-app.get("/", (req, res) => {
-  res.send("TIEA IPTV PROXY RUNNING");
+app.get("/", (req,res)=>{
+res.send("TIEA IPTV PROXY RUNNING");
 });
 
-// CHANNEL
-app.get("/ch/:id", async (req, res) => {
+app.get("/ch/:id", async (req,res)=>{
 
-  const id = req.params.id;
-  const url = `${HOST}/${USER}/${PASS}/${id}`;
+const id = req.params.id;
+const url = `${HOST}/${USER}/${PASS}/${id}`;
 
-  try {
+try{
 
-    const r = await fetch(url,{
-      headers:{
-        "User-Agent":"Mozilla/5.0"
-      }
-    });
+const r = await fetch(url,{
+headers:{
+"User-Agent":"Mozilla/5.0"
+}
+});
 
-    if(!r.ok){
-      return res.status(500).send("source error");
-    }
+if(!r.ok){
+return res.status(500).send("source error");
+}
 
-    res.setHeader("Content-Type","video/mp2t");
-    r.body.pipe(res);
+res.setHeader("Content-Type","video/mp2t");
+r.body.pipe(res);
 
-  } catch(e){
+}catch(e){
 
-    res.status(500).send(e.message);
+res.status(500).send(e.message);
 
-  }
+}
 
 });
 
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT,()=>{
-  console.log("TIEA IPTV Proxy running on "+PORT);
+console.log("TIEA IPTV Proxy running on "+PORT);
 });
-
