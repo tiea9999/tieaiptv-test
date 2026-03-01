@@ -7,13 +7,16 @@ import https from "https";
 const app = express();
 app.use(cors());
 
+// ===== CONFIG =====
 const HOST = "http://safetv.vip:8080";
 const USER = "8gULQeqH3I";
 const PASS = "kbuahRdUJV";
 
+// ===== KEEP ALIVE =====
 const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });
 const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 50 });
 
+// ===== CHANNEL LIST =====
 const channels = {
   mono2: "130724",
   mono2_en: "130725",
@@ -22,18 +25,20 @@ const channels = {
   mono29: "8664"
 };
 
+// ===== HOME =====
 app.get("/", (req,res)=>{
 res.send("TIEA IPTV PROXY RUNNING");
 });
 
+// ===== PLAYLIST =====
 app.get("/playlist.m3u",(req,res)=>{
 
 let m3u="#EXTM3U\n";
 
 for(const key in channels){
 
-m3u+=`#EXTINF:-1,${key}\n`;
-m3u+=`${req.protocol}://${req.get("host")}/${key}\n`;
+m3u+=`#EXTINF:-1 tvg-name="${key}" group-title="TV",${key}\n`;
+m3u+=`https://${req.get("host")}/${key}\n`;
 
 }
 
@@ -42,6 +47,7 @@ res.send(m3u);
 
 });
 
+// ===== STREAM =====
 app.get("/:name", async (req,res)=>{
 
 const id = channels[req.params.name];
@@ -63,9 +69,10 @@ agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 
 let text = await r.text();
 
+// rewrite segment
 text = text.replace(
 /^(?!#)(.*)$/gm,
-`/segment/${id}/$1`
+`https://${req.get("host")}/segment/${id}/$1`
 );
 
 res.setHeader("Content-Type","application/vnd.apple.mpegurl");
@@ -79,6 +86,7 @@ res.status(500).send(e.message);
 
 });
 
+// ===== SEGMENT =====
 app.get("/segment/:id/:file", async (req,res)=>{
 
 const id = req.params.id;
@@ -109,6 +117,7 @@ res.status(500).send(e.message);
 
 });
 
+// ===== START SERVER =====
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT,()=>{
