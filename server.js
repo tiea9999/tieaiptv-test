@@ -27,7 +27,7 @@ headers:{
 });
 
 if(!r.ok){
-return res.status(500).send("source error");
+return res.status(500).send("Source error");
 }
 
 res.setHeader("Content-Type","video/mp2t");
