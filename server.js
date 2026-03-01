@@ -13,8 +13,8 @@ const USER = "8gULQeqH3I";
 const PASS = "kbuahRdUJV";
 
 // ===== KEEP ALIVE =====
-const httpAgent = new http.Agent({ keepAlive: true, maxSockets: 50 });
-const httpsAgent = new https.Agent({ keepAlive: true, maxSockets: 50 });
+const httpAgent = new http.Agent({ keepAlive: true });
+const httpsAgent = new https.Agent({ keepAlive: true });
 
 // ===== CHANNEL LIST =====
 const channels = {
@@ -26,59 +26,62 @@ const channels = {
 };
 
 // ===== HOME =====
-app.get("/", (req,res)=>{
-res.send("TIEA IPTV PROXY RUNNING");
+app.get("/", (req, res) => {
+  res.send("TIEA IPTV PROXY RUNNING");
 });
 
 // ===== PLAYLIST =====
-app.get("/playlist.m3u",(req,res)=>{
+app.get("/playlist.m3u", (req, res) => {
 
-let m3u="#EXTM3U\n";
+let host = req.headers["x-forwarded-host"] || req.get("host");
+let protocol = "https";
 
-for(const key in channels){
+let m3u = "#EXTM3U\n";
 
-m3u+=`#EXTINF:-1 tvg-name="${key}" group-title="TV",${key}\n`;
-m3u+=`https://${req.get("host")}/${key}\n`;
+for (const key in channels) {
+
+m3u += `#EXTINF:-1 tvg-id="${key}" tvg-name="${key}" group-title="TV",${key}\n`;
+m3u += `${protocol}://${host}/${key}\n`;
 
 }
 
-res.setHeader("Content-Type","audio/x-mpegurl");
+res.setHeader("Content-Type", "application/x-mpegURL");
 res.send(m3u);
 
 });
 
 // ===== STREAM =====
-app.get("/:name", async (req,res)=>{
+app.get("/:name", async (req, res) => {
 
 const id = channels[req.params.name];
 
-if(!id) return res.status(404).send("Channel not found");
+if (!id) return res.status(404).send("Channel not found");
 
 const url = `${HOST}/live/${USER}/${PASS}/${id}.m3u8`;
 
-try{
+try {
 
-const r = await fetch(url,{
-headers:{
-"User-Agent":"Mozilla/5.0",
-"Connection":"keep-alive",
-"Referer":HOST
+const r = await fetch(url, {
+headers: {
+"User-Agent": "Mozilla/5.0",
+"Referer": HOST
 },
 agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 });
 
 let text = await r.text();
 
-// rewrite segment
+let host = req.headers["x-forwarded-host"] || req.get("host");
+
 text = text.replace(
 /^(?!#)(.*)$/gm,
-`https://${req.get("host")}/segment/${id}/$1`
+`https://${host}/segment/${id}/$1`
 );
 
-res.setHeader("Content-Type","application/vnd.apple.mpegurl");
+res.setHeader("Content-Type", "application/vnd.apple.mpegurl");
 res.send(text);
 
-}catch(e){
+} catch (e) {
 
 res.status(500).send(e.message);
 
@@ -87,29 +90,27 @@ res.status(500).send(e.message);
 });
 
 // ===== SEGMENT =====
-app.get("/segment/:id/:file", async (req,res)=>{
+app.get("/segment/:id/:file", async (req, res) => {
 
-const id = req.params.id;
-const file = req.params.file;
+const { id, file } = req.params;
 
 const url = `${HOST}/live/${USER}/${PASS}/${id}/${file}`;
 
-try{
+try {
 
-const r = await fetch(url,{
-headers:{
-"User-Agent":"Mozilla/5.0",
-"Connection":"keep-alive",
-"Referer":HOST
+const r = await fetch(url, {
+headers: {
+"User-Agent": "Mozilla/5.0",
+"Referer": HOST
 },
 agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 });
 
-res.setHeader("Content-Type","video/mp2t");
+res.setHeader("Content-Type", "video/mp2t");
 
 r.body.pipe(res);
 
-}catch(e){
+} catch (e) {
 
 res.status(500).send(e.message);
 
@@ -117,9 +118,8 @@ res.status(500).send(e.message);
 
 });
 
-// ===== START SERVER =====
 const PORT = process.env.PORT || 8080;
 
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
 console.log("TIEA IPTV PROXY RUNNING");
 });
