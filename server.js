@@ -1,15 +1,9 @@
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
-import http from "http";
-import https from "https";
 
 const app = express();
 app.use(cors());
-
-// keep alive agent
-const httpAgent = new http.Agent({ keepAlive: true });
-const httpsAgent = new https.Agent({ keepAlive: true });
 
 // ===== CONFIG =====
 const HOST = "http://mypanel-4k.com:80";
@@ -46,31 +40,27 @@ res.send(m3u);
 
 });
 
-// ===== CHANNEL =====
+// ===== CHANNEL STREAM =====
 app.get("/:name", async (req,res)=>{
 
-const ch=channels[req.params.name];
+const ch = channels[req.params.name];
 
 if(!ch) return res.status(404).send("Channel not found");
 
-const url=`${HOST}/${USER}/${PASS}/${ch.id}`;
+const url = `${HOST}/${USER}/${PASS}/${ch.id}`;
 
 try{
 
-const r=await fetch(url,{
-agent: url.startsWith("https") ? httpsAgent : httpAgent,
+const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
 "Connection":"keep-alive"
 }
 });
 
-const buffer=await r.arrayBuffer();
-
 res.setHeader("Content-Type","video/mp2t");
-res.setHeader("Cache-Control","public, max-age=5");
 
-res.send(Buffer.from(buffer));
+r.body.pipe(res);
 
 }catch(e){
 
@@ -81,8 +71,8 @@ res.status(500).send(e.message);
 });
 
 // ===== START =====
-const PORT=process.env.PORT || 8080;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT,()=>{
-console.log("TIEA IPTV PROXY running on "+PORT);
+console.log("TIEA IPTV Proxy running on "+PORT);
 });
