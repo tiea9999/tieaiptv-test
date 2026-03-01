@@ -18,7 +18,7 @@ const channels = {
 
 // HOME
 app.get("/", (req,res)=>{
-res.send("TIEA IPTV STREAM PROXY RUNNING");
+  res.send("TIEA IPTV STREAM PROXY RUNNING");
 });
 
 // PLAYLIST
@@ -54,12 +54,14 @@ try{
 const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
+"Icy-MetaData":"1",
 "Connection":"keep-alive"
 }
 });
 
 res.setHeader("Content-Type","video/mp2t");
 
+// stream ตรง
 r.body.pipe(res);
 
 }catch(e){
