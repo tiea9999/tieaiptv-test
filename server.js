@@ -1,9 +1,15 @@
 import express from "express";
 import fetch from "node-fetch";
 import cors from "cors";
+import http from "http";
+import https from "https";
 
 const app = express();
 app.use(cors());
+
+// keep alive agent
+const httpAgent = new http.Agent({ keepAlive: true });
+const httpsAgent = new https.Agent({ keepAlive: true });
 
 // ===== CONFIG =====
 const HOST = "http://mypanel-4k.com:80";
@@ -40,7 +46,7 @@ res.send(m3u);
 
 });
 
-// ===== CHANNEL STREAM =====
+// ===== CHANNEL =====
 app.get("/:name", async (req,res)=>{
 
 const ch=channels[req.params.name];
@@ -52,6 +58,7 @@ const url=`${HOST}/${USER}/${PASS}/${ch.id}`;
 try{
 
 const r=await fetch(url,{
+agent: url.startsWith("https") ? httpsAgent : httpAgent,
 headers:{
 "User-Agent":"Mozilla/5.0",
 "Connection":"keep-alive"
@@ -61,6 +68,7 @@ headers:{
 const buffer=await r.arrayBuffer();
 
 res.setHeader("Content-Type","video/mp2t");
+res.setHeader("Cache-Control","public, max-age=5");
 
 res.send(Buffer.from(buffer));
 
