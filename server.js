@@ -6,11 +6,11 @@ const app = express();
 app.use(cors());
 
 // ===== CONFIG =====
-const HOST = "http://192.142.28.55:8080";
+const HOST = "http://safetv.vip:8080";
 const USER = "8gULQeqH3I";
 const PASS = "kbuahRdUJV";
 
-// ===== CHANNEL LIST =====
+// ===== CHANNEL =====
 const channels = {
   mono2: "130724",
   mono2_en: "130725",
@@ -45,7 +45,6 @@ res.send(m3u);
 app.get("/:name", async (req,res)=>{
 
 const id = channels[req.params.name];
-
 if(!id) return res.status(404).send("Channel not found");
 
 const url = `${HOST}/live/${USER}/${PASS}/${id}.m3u8`;
@@ -55,32 +54,30 @@ try{
 const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
-"Referer":"http://safetv.vip/",
-"Origin":"http://safetv.vip"
+"Referer":HOST,
+"Origin":HOST
 }
 });
 
 let text = await r.text();
 
-// rewrite segment
+// rewrite segment path
 text = text.replace(
-/^(?!#)(.*\.ts.*)$/gm,
-`/segment/${id}/$1`
+/^(?!#)(.+)$/gm,
+`${req.protocol}://${req.get("host")}/segment/${id}/$1`
 );
 
 res.setHeader("Content-Type","application/vnd.apple.mpegurl");
 res.send(text);
 
 }catch(e){
-
 res.status(500).send(e.message);
-
 }
 
 });
 
 // ===== SEGMENT =====
-app.get("/segment/:id/:file", async (req,res)=>{
+app.get("/segment/:id/:file(*)", async (req,res)=>{
 
 const id = req.params.id;
 const file = req.params.file;
@@ -92,19 +89,16 @@ try{
 const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
-"Referer":"http://safetv.vip/",
-"Origin":"http://safetv.vip"
+"Referer":HOST,
+"Origin":HOST
 }
 });
 
 res.setHeader("Content-Type","video/mp2t");
-
 r.body.pipe(res);
 
 }catch(e){
-
 res.status(500).send(e.message);
-
 }
 
 });
