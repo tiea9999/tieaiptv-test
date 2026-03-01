@@ -30,6 +30,23 @@ app.get("/", (req,res)=>{
 res.send("TIEA IPTV PROXY RUNNING");
 });
 
+// ===== PLAYLIST =====
+app.get("/playlist.m3u",(req,res)=>{
+
+let m3u="#EXTM3U\n";
+
+for(const key in channels){
+
+m3u+=`#EXTINF:-1,${key}\n`;
+m3u+=`${req.protocol}://${req.get("host")}/${key}\n`;
+
+}
+
+res.setHeader("Content-Type","audio/x-mpegurl");
+res.send(m3u);
+
+});
+
 // ===== STREAM =====
 app.get("/:name", async (req,res)=>{
 
@@ -43,17 +60,21 @@ try{
 
 const r = await fetch(url,{
 headers:{
-"User-Agent":"Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+"User-Agent":"Mozilla/5.0",
 "Accept":"*/*",
 "Connection":"keep-alive",
 "Referer":HOST
 },
-agent: parsedURL => parsedURL.protocol === 'http:' ? httpAgent : httpsAgent
+agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 });
 
-res.setHeader("Content-Type","application/vnd.apple.mpegurl");
+let text = await r.text();
 
-r.body.pipe(res);
+// แก้ path ts ให้ผ่าน proxy
+text = text.replace(/(.*\.ts)/g,`${HOST}/live/${USER}/${PASS}/$1`);
+
+res.setHeader("Content-Type","application/vnd.apple.mpegurl");
+res.send(text);
 
 }catch(e){
 
