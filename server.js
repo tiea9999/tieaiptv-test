@@ -23,7 +23,7 @@ const id = channels[req.params.name];
 
 if(!id) return res.send("Channel not found");
 
-const url = `${HOST}/live/${USER}/${PASS}/$id`;
+const url = `${HOST}/live/${USER}/${PASS}/${id}`;
 
 try{
 
