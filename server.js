@@ -6,14 +6,14 @@ const app = express();
 app.use(cors());
 
 // ===== CONFIG =====
-const HOST = "http://mypanel-4k.com:80";
-const USER = "rmt8r91bac";
-const PASS = "tsleey7v5g";
+const HOST = "http://safetv.vip:8080";
+const USER = "8gULQeqH3I";
+const PASS = "kbuahRdUJV";
 
 // ===== CHANNEL =====
 const channels = {
-  hbo: { id: "1776086", name: "HBO" },
-  nick: { id: "1776230", name: "Nick" }
+  hbo: { id: "130724", name: "monomax2" },
+  nick: { id: "130734", name: "monomax1" }
 };
 
 // ===== HOME =====
