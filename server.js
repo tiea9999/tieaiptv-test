@@ -12,7 +12,7 @@ const PASS = "tsleey7v5g";
 
 // ===== CHANNEL LIST =====
 const channels = {
-  hbo: { id: 1776087, name: "HBO" },
+  hbo: { id: 1776086, name: "HBO" },
   nick: { id: 1776230, name: "Nick" }
 };
 
