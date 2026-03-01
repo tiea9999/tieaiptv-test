@@ -47,7 +47,7 @@ res.send(m3u);
 
 });
 
-// ===== STREAM =====
+// ===== HLS PLAYLIST =====
 app.get("/:name", async (req,res)=>{
 
 const id = channels[req.params.name];
@@ -61,7 +61,6 @@ try{
 const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
-"Accept":"*/*",
 "Connection":"keep-alive",
 "Referer":HOST
 },
@@ -70,11 +69,45 @@ agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 
 let text = await r.text();
 
-// แก้ path ts ให้ผ่าน proxy
-text = text.replace(/(.*\.ts)/g,`${HOST}/live/${USER}/${PASS}/$1`);
+// rewrite ts ให้ผ่าน proxy
+text = text.replace(
+/^(?!#)(.*\.ts.*)$/gm,
+`/segment/${id}/$1`
+);
 
 res.setHeader("Content-Type","application/vnd.apple.mpegurl");
 res.send(text);
+
+}catch(e){
+
+res.status(500).send(e.message);
+
+}
+
+});
+
+// ===== SEGMENT =====
+app.get("/segment/:id/:file", async (req,res)=>{
+
+const id = req.params.id;
+const file = req.params.file;
+
+const url = `${HOST}/live/${USER}/${PASS}/${id}/${file}`;
+
+try{
+
+const r = await fetch(url,{
+headers:{
+"User-Agent":"Mozilla/5.0",
+"Connection":"keep-alive",
+"Referer":HOST
+},
+agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
+});
+
+res.setHeader("Content-Type","video/mp2t");
+
+r.body.pipe(res);
 
 }catch(e){
 
