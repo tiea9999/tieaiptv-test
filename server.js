@@ -5,63 +5,57 @@ import cors from "cors";
 const app = express();
 app.use(cors());
 
-// CONFIG
-const HOST = "http://safetv.vip:8080";
-const USER = "8gULQeqH3I";
-const PASS = "kbuahRdUJV";
-
-// CHANNEL
-const channels = {
-  mono2: { id: "130725", name: "MONOMAX2" },
-  mono1: { id: "130734", name: "MONOMAX1" }
-};
+// Xtream playlist
+const SOURCE = "http://safetv.vip:8080/get.php?username=8gULQeqH3I&password=kbuahRdUJV&type=m3u_plus";
 
 // HOME
 app.get("/", (req,res)=>{
-  res.send("TIEA IPTV STREAM PROXY RUNNING");
+res.send("TIEA IPTV PLAYLIST PROXY RUNNING");
 });
 
-// PLAYLIST
-app.get("/playlist.m3u",(req,res)=>{
+// PLAYLIST PROXY
+app.get("/playlist.m3u", async (req,res)=>{
 
-let m3u="#EXTM3U\n";
+try{
 
-for(const key in channels){
+const r = await fetch(SOURCE);
+let text = await r.text();
 
-const ch=channels[key];
+// เปลี่ยน host มาเป็น server ของเรา
+const host = `${req.protocol}://${req.get("host")}/stream?url=`;
 
-m3u+=`#EXTINF:-1,${ch.name}\n`;
-m3u+=`${req.protocol}://${req.get("host")}/${key}\n`;
-
-}
+text = text.replace(
+/http:\/\/[^ \n"]+/g,
+m => host + encodeURIComponent(m)
+);
 
 res.setHeader("Content-Type","audio/x-mpegurl");
-res.send(m3u);
+res.send(text);
+
+}catch(e){
+
+res.status(500).send(e.message);
+
+}
 
 });
 
 // STREAM
-app.get("/:name", async (req,res)=>{
+app.get("/stream", async (req,res)=>{
 
-const ch = channels[req.params.name];
-
-if(!ch) return res.status(404).send("Channel not found");
-
-const url = `${HOST}/live/${USER}/${PASS}/${ch.id}`;
+const url = req.query.url;
 
 try{
 
 const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
-"Icy-MetaData":"1",
 "Connection":"keep-alive"
 }
 });
 
 res.setHeader("Content-Type","video/mp2t");
 
-// stream ตรง
 r.body.pipe(res);
 
 }catch(e){
