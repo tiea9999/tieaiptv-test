@@ -12,13 +12,13 @@ const PASS = "kbuahRdUJV";
 
 // ===== CHANNEL =====
 const channels = {
-  hbo: { id: "130724", name: "monomax2" },
-  nick: { id: "130734", name: "monomax1" }
+  mono2: { id: "130724", name: "MONOMAX2" },
+  mono1: { id: "130734", name: "MONOMAX1" }
 };
 
 // ===== HOME =====
 app.get("/", (req,res)=>{
-res.send("TIEA IPTV PROXY RUNNING");
+res.send("TIEA IPTV HLS PROXY RUNNING");
 });
 
 // ===== PLAYLIST =====
@@ -40,18 +40,55 @@ res.send(m3u);
 
 });
 
-// ===== CHANNEL STREAM =====
+// ===== HLS PLAYLIST =====
 app.get("/:name", async (req,res)=>{
 
 const ch = channels[req.params.name];
 
 if(!ch) return res.status(404).send("Channel not found");
 
-const url = `${HOST}/${USER}/${PASS}/${ch.id}`;
+const url = `${HOST}/live/${USER}/${PASS}/${ch.id}.m3u8`;
 
 try{
 
 const r = await fetch(url,{
+headers:{
+"User-Agent":"Mozilla/5.0",
+"Connection":"keep-alive"
+}
+});
+
+let text = await r.text();
+
+// rewrite segment
+text = text.replace(
+/^(?!#)(.*\.ts.*)$/gm,
+`/segment/${ch.id}/$1`
+);
+
+res.setHeader("Content-Type","application/vnd.apple.mpegurl");
+
+res.send(text);
+
+}catch(e){
+
+res.status(500).send(e.message);
+
+}
+
+});
+
+// ===== SEGMENT =====
+app.get("/segment/:id/:file", async (req,res)=>{
+
+const id=req.params.id;
+const file=req.params.file;
+
+const url=`${HOST}/live/${USER}/${PASS}/${id}/${file}`;
+
+try{
+
+const r=await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
 "Connection":"keep-alive"
