@@ -12,7 +12,7 @@ const PASS = "kbuahRdUJV";
 
 // ===== CHANNEL =====
 const channels = {
-  mono2: { id: "130724", name: "MONOMAX2" },
+  mono2: { id: "130725", name: "MONOMAX2" },
   mono1: { id: "130734", name: "MONOMAX1" }
 };
 
