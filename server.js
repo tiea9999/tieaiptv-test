@@ -12,13 +12,13 @@ const PASS = "tsleey7v5g";
 
 // ===== CHANNEL LIST =====
 const channels = {
-  hbo: { id: 1776086, name: "HBO" },
+  hbo: { id: 1776087, name: "HBO" },
   nick: { id: 1776230, name: "Nick" }
 };
 
 // ===== HOME =====
 app.get("/", (req,res)=>{
-res.send("TIEA IPTV HLS PROXY RUNNING");
+  res.send("TIEA IPTV HLS PROXY RUNNING");
 });
 
 // ===== PLAYLIST =====
@@ -40,7 +40,7 @@ res.send(m3u);
 
 });
 
-// ===== HLS PLAYLIST =====
+// ===== PLAYLIST CHANNEL =====
 app.get("/ch/:id", async (req,res)=>{
 
 const id = req.params.id;
@@ -56,12 +56,14 @@ headers:{
 }
 });
 
+if(!r.ok) return res.status(502).send("source error");
+
 let text = await r.text();
 
-// rewrite segment
+// rewrite ts segment
 text = text.replace(
-/^(?!#)(.*\.ts.*)$/gm,
-`/segment/${id}/$1`
+/^(?!#)(.*)$/gm,
+`${req.protocol}://${req.get("host")}/segment/${id}/$1`
 );
 
 res.setHeader("Content-Type","application/vnd.apple.mpegurl");
@@ -77,8 +79,7 @@ res.status(500).send(e.message);
 // ===== SEGMENT =====
 app.get("/segment/:id/:file", async (req,res)=>{
 
-const id = req.params.id;
-const file = req.params.file;
+const {id,file} = req.params;
 
 const url = `${HOST}/live/${USER}/${PASS}/${id}/${file}`;
 
@@ -91,6 +92,8 @@ headers:{
 }
 });
 
+if(!r.ok) return res.status(502).send("segment error");
+
 res.setHeader("Content-Type","video/mp2t");
 
 r.body.pipe(res);
@@ -102,7 +105,7 @@ res.status(500).send(e.message);
 });
 
 // ===== START =====
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 8080;
 
 app.listen(PORT,()=>{
 console.log("TIEA IPTV HLS Proxy running on "+PORT);
