@@ -40,7 +40,7 @@ res.send(m3u);
 
 });
 
-// ===== HLS PLAYLIST =====
+// ===== M3U8 =====
 app.get("/:name", async (req,res)=>{
 
 const ch = channels[req.params.name];
@@ -53,8 +53,7 @@ try{
 
 const r = await fetch(url,{
 headers:{
-"User-Agent":"Mozilla/5.0",
-"Connection":"keep-alive"
+"User-Agent":"Mozilla/5.0"
 }
 });
 
@@ -62,12 +61,11 @@ let text = await r.text();
 
 // rewrite segment
 text = text.replace(
-/^(?!#)(.*\.ts.*)$/gm,
+/(.*\.ts)/g,
 `/segment/${ch.id}/$1`
 );
 
 res.setHeader("Content-Type","application/vnd.apple.mpegurl");
-
 res.send(text);
 
 }catch(e){
@@ -81,14 +79,14 @@ res.status(500).send(e.message);
 // ===== SEGMENT =====
 app.get("/segment/:id/:file", async (req,res)=>{
 
-const id=req.params.id;
-const file=req.params.file;
+const id = req.params.id;
+const file = req.params.file;
 
-const url=`${HOST}/live/${USER}/${PASS}/${id}/${file}`;
+const url = `${HOST}/live/${USER}/${PASS}/${id}/${file}`;
 
 try{
 
-const r=await fetch(url,{
+const r = await fetch(url,{
 headers:{
 "User-Agent":"Mozilla/5.0",
 "Connection":"keep-alive"
