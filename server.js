@@ -7,16 +7,16 @@ import https from "https";
 const app = express();
 app.use(cors());
 
-// ===== CONFIG =====
+// CONFIG
 const HOST = "http://safetv.vip:8080";
 const USER = "8gULQeqH3I";
 const PASS = "kbuahRdUJV";
 
-// ===== KEEP ALIVE =====
+// KEEP ALIVE
 const httpAgent = new http.Agent({ keepAlive: true });
 const httpsAgent = new https.Agent({ keepAlive: true });
 
-// ===== CHANNEL =====
+// CHANNEL
 const channels = {
   mono2: "130724",
   mono2_en: "130725",
@@ -25,12 +25,12 @@ const channels = {
   mono29: "8664"
 };
 
-// ===== HOME =====
+// HOME
 app.get("/", (req,res)=>{
 res.send("TIEA IPTV PROXY RUNNING");
 });
 
-// ===== PLAYLIST =====
+// PLAYLIST
 app.get("/playlist.m3u",(req,res)=>{
 
 let m3u="#EXTM3U\n";
@@ -47,7 +47,7 @@ res.send(m3u);
 
 });
 
-// ===== HLS PLAYLIST =====
+// STREAM
 app.get("/:name", async (req,res)=>{
 
 const id = channels[req.params.name];
@@ -69,7 +69,6 @@ agent: parsedURL => parsedURL.protocol === "http:" ? httpAgent : httpsAgent
 
 let text = await r.text();
 
-// rewrite ts ให้ผ่าน proxy
 text = text.replace(
 /^(?!#)(.*\.ts.*)$/gm,
 `/segment/${id}/$1`
@@ -86,7 +85,7 @@ res.status(500).send(e.message);
 
 });
 
-// ===== SEGMENT =====
+// SEGMENT
 app.get("/segment/:id/:file", async (req,res)=>{
 
 const id = req.params.id;
@@ -117,7 +116,7 @@ res.status(500).send(e.message);
 
 });
 
-// ===== START =====
+// START
 const PORT = process.env.PORT || 8080;
 
 app.listen(PORT,()=>{
